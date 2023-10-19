@@ -31,7 +31,7 @@ import masks
 
 # A seed to replicate results
 
-configfile: "workflows/config/snakemake/tiny_config.yaml"
+configfile: "workflows/config/snakemake/tiny_vaquita.yaml"
 
 np.random.seed(config["seed"])
 output_dir = os.path.abspath(config["output_dir"])
@@ -238,7 +238,9 @@ rule run_stairwayplot:
         )
 
         chromIDs = [Path(file).stem.split('_')[1] for file in inputs]
-        if wildcards.annots == "none" or sp_mask == "none":
+        if sp_mask == "none":
+            mask_intervals=[None]*len(chromIDs)
+        elif wildcards.annots == "none":
             mask_intervals = masks.get_combined_masks(
                 species.id,
                 mask_file,
@@ -251,7 +253,6 @@ rule run_stairwayplot:
                 chromIDs,
                 chrom_annotation=wildcards.annots,
             )
-
         runner.ts_to_stairway(inputs, wildcards.pops, mask_intervals=mask_intervals, num_bootstraps=200)
         runner.run_theta_estimation(max_workers=threads, show_progress=True)
         runner.run_summary(
