@@ -6,7 +6,7 @@ import os
 import numpy as np
 import stdpopsim
 
-configfile: "workflows/config/snakemake/tiny_config.yaml"
+configfile: "workflows/config/snakemake/tiny_vaquita.yaml"
 
 np.random.seed(config["seed"])
 
@@ -72,10 +72,15 @@ rule simulation:
             #samples = model.get_samples(*demo_sample_size_dict[wildcards.demog])  # YRI, CEU, CHB
         samples = {f"{model.populations[i].name}": m for i, m in enumerate(demo_sample_size_dict[wildcards.demog])}
         genetic_map_id = config["genetic_map"]
+        if genetic_map_id == "None":
+            genetic_map_id=None
         contig = species.get_contig(wildcards.chrms, genetic_map=genetic_map_id)
         if wildcards.dfes != "none":
             # Load dfe only if provided
-            dfe = species.get_dfe(wildcards.dfes)
+            if wildcards.dfes == "Mixed_K23":
+                dfe = stdpopsim.get_species("HomSap").get_dfe("Mixed_K23")
+            else:
+                dfe = species.get_dfe(wildcards.dfes)
         if wildcards.annots == "all_sites":
             # Adding selection to the whole contig
             contig.add_dfe(intervals=np.array([[0, int(contig.length)]]), DFE=dfe)
