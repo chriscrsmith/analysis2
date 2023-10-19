@@ -60,6 +60,8 @@ replicates = config["replicates"]
 # if value None is given default_recombination_rates are
 # used with a flat map
 genetic_map_id = config["genetic_map"]
+if genetic_map_id == "None":
+    genetic_map_id=None
 
 # The DFE id used for selection analyses
 dfe_id = config["dfe_list"][0] # need to generalize to more than one...
@@ -473,25 +475,27 @@ rule gone_prep_inputs:
         )
         # handle no annotation case
         chromIDs = [Path(file).stem.split('_')[1] for file in inputs]
-        if wildcards.annots == "none" or gone_mask == "none":
+        if sp_mask == "none":
+            mask_intervals=[None]*len(chromIDs)
+        elif wildcards.annots == "none":
             mask_intervals = masks.get_combined_masks(
-                                            species.id,
-                                            mask_file,
-                                            chromIDs,
-                                            )
+                species.id,
+                mask_file,
+                chromIDs,
+            )
         else:
             mask_intervals = masks.get_combined_masks(
-                                            species.id,
-                                            mask_file,
-                                            chromIDs,
-                                            chrom_annotation=wildcards.annots,
-                                            )
-
-        genetic_map = species.get_genetic_map(genetic_map_id)
-	if genetic_map == "None": genetic_map=None
-        if not genetic_map.is_cached():
-            genetic_map.download()
-
+                species.id,
+                mask_file,
+                chromIDs,
+                chrom_annotation=wildcards.annots,
+            )
+        if genetic_map_id is not None:
+            genetic_map = species.get_genetic_map(genetic_map_id)
+            if not genetic_map.is_cached():
+                genetic_map.download()
+        else:
+            genetic_map=None
         gone.ts2plink(inputs, output[0], output[1], wildcards.pops, genetic_map, chromIDs, mask_intervals=mask_intervals)
 
 
@@ -565,19 +569,21 @@ rule ts_to_smc:
         output_dir + "/inference/{demog}/smcpp/{dfes}/{annots}/{seeds}/{pops}/sim_{chrms}.trees.smc.gz"
     run:
         # handle no annotation case
-        if wildcards.annots == "none" or smcpp_mask == "none":
+        if sp_mask == "none":
+            mask_intervals=[None]*len(wildcards.chrms)
+        elif wildcards.annots == "none":
             mask_intervals = masks.get_combined_masks(
-                                            species.id,
-                                            mask_file,
-                                            wildcards.chrms,
-                                            )
+                species.id,
+                mask_file,
+                wildcards.chrms,
+            )
         else:
             mask_intervals = masks.get_combined_masks(
-                                            species.id,
-                                            mask_file,
-                                            wildcards.chrms,
-                                            chrom_annotation=wildcards.annots,
-                                            )
+                species.id,
+                mask_file,
+                wildcards.chrms,
+                chrom_annotation=wildcards.annots,
+            )
         smc.write_smcpp_file(input[0], output[0], wildcards.pops, mask_intervals=mask_intervals)
 
 

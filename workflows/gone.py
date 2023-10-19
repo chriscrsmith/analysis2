@@ -54,7 +54,8 @@ def ts2plink(ts_path, ped_file, map_file, pop_name, genetic_map, chromID, mask_i
     """
     if type(mask_intervals) is not list:
         mask_intervals = [mask_intervals]
-    gm_chr = [genetic_map.get_chromosome_map(chrms) for chrms in chromID]
+    if genetic_map is not None:
+        gm_chr = [genetic_map.get_chromosome_map(chrms) for chrms in chromID]
     snp_counter = 1
     genomat_list = []
     # add to map file for chroms
@@ -76,13 +77,19 @@ def ts2plink(ts_path, ped_file, map_file, pop_name, genetic_map, chromID, mask_i
             # make .map
             positions = ts.tables.sites.position
             # NOTE: this is very slow
-            for snp in range(ts.genotype_matrix().shape[0]):
-                bp = int(positions[snp])
-                cM = gm_chr[i].get_cumulative_mass(bp) * 100
-                #outline = [str(i+1), "snp"+str(snp_counter), "0", str(bp)] # test with uniform rec.
-                outline = [str(i+1), "snp"+str(snp_counter), str(cM), str(bp)]
-                mapfile.write(" ".join(outline) + "\n")
-                snp_counter += 1
+            if genetic_map is None:
+                for snp in range(ts.genotype_matrix().shape[0]):
+                    bp = int(positions[snp])
+                    outline = [str(i+1), "snp"+str(snp_counter), "0", str(bp)]
+                    mapfile.write(" ".join(outline) + "\n")
+                    snp_counter += 1
+            else:
+                for snp in range(ts.genotype_matrix().shape[0]):
+                    bp = int(positions[snp])
+                    cM = gm_chr[i].get_cumulative_mass(bp) * 100
+                    outline = [str(i+1), "snp"+str(snp_counter), str(cM), str(bp)]
+                    mapfile.write(" ".join(outline) + "\n")
+                    snp_counter += 1
 
     # build inds
     inds = {}
