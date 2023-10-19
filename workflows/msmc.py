@@ -46,7 +46,7 @@ def write_msmc_file(path, output, pop_name, mask_intervals=None):
     fi = open(output, "w")
     prev = 0
     if mask_intervals is not None:
-        mask_intervals = mask_intervals
+        mask_intervals = mask_intervals # ?
         mask_intervals = pd.IntervalIndex.from_arrays(mask_intervals[:,0], mask_intervals[:,1])
         for var in ts.variants():
             cur = int(var.site.position)
@@ -61,7 +61,6 @@ def write_msmc_file(path, output, pop_name, mask_intervals=None):
     else:
         for var in ts.variants():
             cur = int(var.site.position)
-            #print("here")
             if cur > prev:
                 geno = ''.join(map(str, var.genotypes))
                 fi.write(f"{chrom}\t{cur}\t{cur-prev}\t{geno}\n")
