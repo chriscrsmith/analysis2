@@ -320,8 +320,8 @@ rule ts_to_multihep:
         output_dir + "/inference/{demog}/msmc/{dfes}/{annots}/{seeds}/{pops}/{chrms}.trees.multihep.txt"
 
     run:
-        if sp_mask == "none":
-            mask_intervals=[None]*len(wildcards.chrms)
+        if msmc_mask == "none":
+            mask_intervals = None
         elif wildcards.annots == "none":
             mask_intervals = masks.get_combined_masks(
                 species.id,
