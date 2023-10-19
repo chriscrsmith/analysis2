@@ -318,20 +318,21 @@ rule ts_to_multihep:
         output_dir + "/inference/{demog}/msmc/{dfes}/{annots}/{seeds}/{pops}/{chrms}.trees.multihep.txt"
 
     run:
-        print(input[0], num_sampled_genomes_msmc, mask_file)
-        if wildcards.annots == "none" or msmc_mask == "none":
+        if sp_mask == "none":
+            mask_intervals=[None]*len(wildcards.chrms)
+        elif wildcards.annots == "none":
             mask_intervals = masks.get_combined_masks(
-                                            species.id,
-                                            mask_file,
-                                            wildcards.chrms,
-                                            )
+                species.id,
+                mask_file,
+                wildcards.chrms,
+            )
         else:
             mask_intervals = masks.get_combined_masks(
-                                            species.id,
-                                            mask_file,
-                                            wildcards.chrms,
-                                            chrom_annotation=wildcards.annots,
-                                            )
+                species.id,
+                mask_file,
+                wildcards.chrms,
+                chrom_annotation=wildcards.annots,
+            )
         msmc.write_msmc_file(input[0], output[0], wildcards.pops, mask_intervals)
 
 
@@ -487,6 +488,7 @@ rule gone_prep_inputs:
                                             )
 
         genetic_map = species.get_genetic_map(genetic_map_id)
+	if genetic_map == "None": genetic_map=None
         if not genetic_map.is_cached():
             genetic_map.download()
 
